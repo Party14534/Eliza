@@ -1,5 +1,9 @@
 # Zach Dellimore
 
+import copy
+import re
+import random
+
 '''
 Process:
     1. Parse input for keywords
@@ -18,42 +22,48 @@ ADJECTIVE = 4
 '''
 
 
-import re
-
-
 class Keyword:
 
     word = ""
     rank = 0
     wordType = 0
+    response = ""
 
-    def __init__(self, word, rank, wordType):
+    def __init__(self, word, rank, wordType, response):
         self.word = word
         self.rank = rank
         self.wordType = wordType
+        if response:
+            self.response = response
 
 
 # Keywords
 TopKeywords = {
-        "friend": Keyword("friend", 1, 1),
-        "mother": Keyword("mother", 1, 1),
-        "father": Keyword("father", 1, 1),
-        "family": Keyword("family", 1, 1),
-        "feel": Keyword("feel", 1, 3),
-        "sad": Keyword("sad", 1, 4),
-        "unhappy": Keyword("unhappy", 1, 4),
-        "depressed": Keyword("depressed", 1, 4)
+        "friend": Keyword("friend", 1, 1, None),
+        "mother": Keyword("mother", 1, 1, None),
+        "father": Keyword("father", 1, 1, None),
+        "family": Keyword("family", 1, 1, None),
+        "feel": Keyword("feel", 1, 3, None),
+        "sad": Keyword("sad", 1, 4, None),
+        "unhappy": Keyword("unhappy", 1, 4, None),
+        "depressed": Keyword("depressed", 1, 4, None)
         }
 
 MiddleKeywords = {
-        "because": "Is that the real reason?",
-        "always": "Can you give me an example of a time that happened?",
-        "think": "What caused you to think that?"
+        "because": Keyword("because", 2, 0, "Is that the real reason?"),
+        "alway": Keyword("always", 2, 0, "Can you give me an example of a time that happened?"),
+        "think": Keyword("think", 2, 0, "What caused you to think that?")
         }
 
 BottomKeywords = {
         "it": "What does it refer to?",
         "maybe": "Why are you not certain?"
+        }
+
+ExcludeNouns = {
+        "the",
+        "hello",
+        "i"
         }
 
 Fallback = [
@@ -65,11 +75,12 @@ Fallback = [
 
 def ParseInput(line):
     output = []
-    words = line.split()
-    for word in words:
+    words = re.findall(r'\b\w+\b', line)
+
+    for index, word in enumerate(words):
         # If it is a proper noun rank it
-        if len(word) > 0 and word[0].isupper():
-            output.append(Keyword(word, 1, 2))
+        if len(word) > 0 and word[0].isupper() and word.lower() not in ExcludeNouns:
+            output.append(Keyword(word, 1, 2, "Can you tell me about " + word))
             continue
 
         # Substitute plurals
@@ -84,8 +95,15 @@ def ParseInput(line):
         else:
             singularWord = word
 
+        singularWord = singularWord.lower()
+
         if singularWord in TopKeywords:
-            output.append(TopKeywords[singularWord])
+            keyword = copy.deepcopy(TopKeywords[singularWord])
+            if singularWord == "feel" and index < len(words) - 1:
+                keyword.word += " " + words[index + 1]
+            output.append(keyword)
+        elif singularWord in MiddleKeywords:
+            output.append(MiddleKeywords[singularWord])
 
     return output
 
@@ -96,13 +114,35 @@ def main():
         # First get user input
         line = input("User> ")
 
-        if line == "(exit)":
+        if line == "":
+            print("Exiting")
             break
 
         # Then parse user input and generate a response
         output = ParseInput(line)
-        for word in output:
-            print(word.word)
+
+        sorted_output = sorted(output, key=lambda keyword: keyword.rank)
+
+        response = ""
+
+        if len(sorted_output) > 0:
+            keyword = sorted_output[0]
+
+            match sorted_output[0].wordType:
+                case 1:
+                    response = f"ELIZA> Can you tell me about your {keyword.word}"
+                case 2:
+                    response = f"ELIZA> Can you tell me about {keyword.word}"
+                case 3:
+                    response = f"ELIZA> Why do you {keyword.word}"
+                case 4:
+                    response = f"ELIZA> Why are you {keyword.word}"
+                case _:
+                    response = keyword.response
+        else:
+            response = random.choice(Fallback)
+
+        print(response)
 
 
 if __name__ == "__main__":
