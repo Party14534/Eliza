@@ -24,6 +24,7 @@ May not need this
 '''
 
 
+
 class Substitution:
     pattern = ""
     rank = 0
@@ -134,6 +135,8 @@ def ParseInput(line):
 
 
 def main():
+    previousSubIndex = -1
+
     # Main loop of chatbot
     while (True):
         # First get user input
@@ -152,7 +155,12 @@ def main():
         response = ""
 
         if len(sorted_output) > 0:
-            response = sorted_output[0].output
+            if sorted_output[0].pattern == previousSubIndex and len(sorted_output) > 1:
+                response = sorted_output[1].output
+                previousSubIndex = sorted_output[1].pattern
+            else:
+                response = sorted_output[0].output
+                previousSubIndex = sorted_output[0].pattern
 
         else:
             response = random.choice(Fallback)
@@ -161,4 +169,5 @@ def main():
 
 
 if __name__ == "__main__":
+    previousSubIndex = -1
     main()
