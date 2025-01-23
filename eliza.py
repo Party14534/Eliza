@@ -7,22 +7,12 @@ import random
 '''
 Process:
     1. Parse input for keywords
-    2. Rank keywords
-    3. Respond to highest ranked keywords
-        4. If no keywords are found response with Tell me more about that
-'''
+    2. For each keyword check all their possible substitutions
+    3. Respond with the highest ranked substitution
+        4. If no keywords are found respond with Tell me more about that
+
 
 '''
-Using integers to determine response type
-POSSESIVE NOUN = 1
-NOUN = 2
-VERB = 3
-ADJECTIVE = 4
-...
-
-May not need this
-'''
-
 
 
 class Substitution:
@@ -42,7 +32,8 @@ Substitutions = [
         Substitution("", r"How long have you been \1?", 5),
         Substitution("", r"Tell me about your \2", 5),
         Substitution("", r"Tell me about \1", 5),
-        Substitution("", r"When was the last time you felt \3", 6)
+        Substitution("", r"When was the last time you felt \3?", 6),
+        Substitution("", r"Why do you \2 your \4?", 6),
         ]
 
 # Keywords
@@ -50,12 +41,17 @@ TopKeywords = {
         "friend": [0],
         "mother": [0],
         "father": [0],
+        "sister": [0],
+        "brother": [0],
+        "cousin": [0],
+        "child": [0],
+        "children": [0],
         "family": [0],
         "feel": [1, 5],
         "sad": [2],
         "unhappy": [2],
         "depressed": [2],
-        "my": [3]
+        "my": [3, 6]
         }
 
 MiddleKeywords = {
@@ -80,7 +76,8 @@ ExcludeNouns = {
         "she",
         "she's",
         "they",
-        "i've"
+        "i've",
+        "there"
         }
 
 Fallback = [
@@ -94,6 +91,8 @@ def getSubstitution(word, patternIndex, input):
     wordPattern = ''
 
     match patternIndex:
+        case 6:
+            wordPattern = r'.*\b(I)\b\s+\b([A-z]+)\b\s+\b(my)\b\s+\b([A-z]+)\b.*'
         case 5:
             wordPattern = r'.*\b(always)\b\s+\b(feel)\b\s+\b([A-z]+)\b.*'
         case 1 | 3:
