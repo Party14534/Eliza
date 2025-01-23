@@ -42,6 +42,7 @@ Substitutions = [
         Substitution("", r"How long have you been \1?", 5),
         Substitution("", r"Tell me about your \2", 5),
         Substitution("", r"Tell me about \1", 5),
+        Substitution("", r"When was the last time you felt \3", 6)
         ]
 
 # Keywords
@@ -50,7 +51,7 @@ TopKeywords = {
         "mother": [0],
         "father": [0],
         "family": [0],
-        "feel": [1],
+        "feel": [1, 5],
         "sad": [2],
         "unhappy": [2],
         "depressed": [2],
@@ -61,7 +62,8 @@ MiddleKeywords = {
         "because": Substitution("Is that the real reason?", "",  3),
         "always": Substitution("Can you give me an example of a time that happened?", "", 3),
         "think": Substitution("What caused you to think that?", "", 3),
-        "sometimes": Substitution("Can you give me an example of a time that happened?", "", 3)
+        "sometimes": Substitution("Can you give me an example of a time that happened?", "", 3),
+        "today": Substitution("Can you tell me about your day?", "", 3),
         }
 
 BottomKeywords = {
@@ -78,12 +80,13 @@ ExcludeNouns = {
         "she",
         "she's",
         "they",
+        "i've"
         }
 
 Fallback = [
         "Can you elaborate?",
-        "Please go on?",
-        "Tell me more?"
+        "Please go on",
+        "Tell me more"
         ]
 
 
@@ -91,6 +94,8 @@ def getSubstitution(word, patternIndex, input):
     wordPattern = ''
 
     match patternIndex:
+        case 5:
+            wordPattern = r'.*\b(always)\b\s+\b(feel)\b\s+\b([A-z]+)\b.*'
         case 1 | 3:
             wordPattern = r'.*\b(' + word + r')\b\s+\b([A-z]+)\b.*'
         case _:
@@ -127,7 +132,7 @@ def ParseInput(line):
 
         elif len(word) > 0 and word[0].isupper() and word.lower() not in ExcludeNouns:
             # If it is a proper noun rank it
-            substitution = getSubstitution(word, 4, line)
+            substitution = getSubstitution(word, 2, line)
             if substitution:
                 output.append(substitution)
 
