@@ -10,8 +10,6 @@ Process:
     2. For each keyword check all their possible substitutions
     3. Respond with the highest ranked substitution
         4. If no keywords are found respond with Tell me more about that
-
-
 '''
 
 
@@ -29,11 +27,11 @@ class Substitution:
 
 # List of pre-defined substitutions
 Substitutions = [
-        Substitution("", r"Tell me about your \1", 5),
-        Substitution("", r"Why do you \1 \2", 5),
+        Substitution("", r"Can you tell me about your \1", 5),
+        Substitution("", r"Why do you \1 \2", 6),
         Substitution("", r"How long have you been \1", 5),
-        Substitution("", r"Tell me about your \2", 4),
-        Substitution("", r"Tell me about \1", 5),
+        Substitution("", r"Can you tell me about your \2", 4),
+        Substitution("", r"Can you tell me about \1", 4),
         Substitution("", r"When was the last time you felt \3", 6),
         Substitution("", r"Why do you \2 your", 6),
         Substitution("", r"Why do you feel you are", 4)
@@ -62,15 +60,17 @@ TopKeywords = {
         "am": [7]
         }
 
+# These keywords don't need a regex substitution
 NoSubKeywords = {
-        "because": Substitution("Is that the real reason?", "",  3),
-        "always": Substitution("Can you give me an example of a time that happened?", "", 3),
-        "think": Substitution("What caused you to think that?", "", 3),
-        "sometimes": Substitution("Can you give me an example of a time that happened?", "", 3),
-        "today": Substitution("Can you tell me about your day?", "", 3),
-        "it": Substitution("What does it refer to?", "", 1),
-        "maybe": Substitution("Why are you not certain?", "", 1),
-        "hello": Substitution("Hello, what is it you'd like to talk about?", "", 1)
+        "because": Substitution("Is that the real reason", "",  3),
+        "always": Substitution("Can you give me an example of a time that happened", "", 3),
+        "everyday": Substitution("When was the last time this happened", "", 3),
+        "think": Substitution("What caused you to think that", "", 4),
+        "sometimes": Substitution("Can you give me an example of a time that happened", "", 3),
+        "today": Substitution("Can you tell me about your day", "", 3),
+        "it": Substitution("What does it refer to", "", 1),
+        "maybe": Substitution("Why are you not certain", "", 1),
+        "hello": Substitution("Hello, what is it you'd like to talk about", "", 1)
         }
 
 ExcludeNouns = {
@@ -78,12 +78,15 @@ ExcludeNouns = {
         "hello",
         "i",
         "he",
+        "his",
+        "hers",
         "he's",
         "she",
         "she's",
         "they",
         "i've",
-        "there"
+        "there",
+        "last"
         }
 
 Fallback = [
@@ -91,6 +94,8 @@ Fallback = [
         "Please go on",
         "Tell me more"
         ]
+
+name = "User"
 
 
 def getSubstitution(word, patternIndex, input):
@@ -121,9 +126,12 @@ def getSubstitution(word, patternIndex, input):
 
 def ParseInput(line):
     output = []
+
+    # Get all words
     words = re.findall(r'\b\w+\b', line)
 
     for word in words:
+        # Check if the word is in any of the keyword dictionaries
         if word.lower() in TopKeywords:
             substitutions = TopKeywords[word.lower()]
             for substitutionIndex in substitutions:
@@ -135,8 +143,8 @@ def ParseInput(line):
             output.append(NoSubKeywords[word.lower()])
 
         elif len(word) > 0 and word[0].isupper() and word.lower() not in ExcludeNouns:
-            # If it is a proper noun rank it
-            substitution = getSubstitution(word, 2, line)
+            # If it is a proper noun rank it, this has a tendency to be wrong
+            substitution = getSubstitution(word, 4, line)
             if substitution:
                 output.append(substitution)
 
@@ -149,7 +157,7 @@ def main():
     # Main loop of chatbot
     while (True):
         # First get user input
-        line = input("User> ")
+        line = input(name + "> ")
 
         if line == "":
             print("Exiting")
@@ -163,6 +171,7 @@ def main():
 
         response = ""
 
+        # Get the top rated output and try not to choose the same one from last time
         if len(sorted_output) > 0:
             if sorted_output[0].pattern == previousSubIndex and len(sorted_output) > 1:
                 response = sorted_output[1].output
@@ -181,4 +190,12 @@ def main():
 
 if __name__ == "__main__":
     previousSubIndex = -1
+
+    # Get the user's name
+    print("ELIZA> Hello my name is Eliza, what is your name?")
+    line = input("USER> ")
+    words = line.split(' ')
+    name = words[-1]
+    print("ELIZA> Hello " + name + ", what did you want to talk about today?")
+
     main()
