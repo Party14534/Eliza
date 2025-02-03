@@ -1,16 +1,32 @@
-# Zach Dellimore
-
-import copy
-import re
-import random
-
 '''
+Zach Dellimore V00980652
+02/03/2025
+
+Problem:
+    Implement an ELIZA chatbot to talk with the user only using keyword search
+    and substitutions
+
 Process:
     1. Parse input for keywords
     2. For each keyword check all their possible substitutions
     3. Respond with the highest ranked substitution
         4. If no keywords are found respond with Tell me more about that
+
+Example:
+    ELIZA> Hello my name is Eliza, what is your name?
+    USER> Zach
+    ELIZA> Hello Zach, what did you want to talk about today?
+    Zach> My cat
+    ELIZA> Can you tell me about your cat?
+    Zach> His name is Reginald and he makes me feel inadequate
+    ELIZA> Why do you feel inadequate?
+    Zach> He makes fun of me everyday and calls me names
+    ELIZA> Please go on
 '''
+
+import copy
+import re
+import random
 
 
 # This class defines the substitutions
